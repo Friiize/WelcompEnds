@@ -10,6 +10,7 @@ from flask import Flask, request, jsonify, redirect, url_for, flash, session
 
 from flask_restful import Api, Resource
 from flask_cors import CORS, cross_origin
+from werkzeug.debug.repr import dump
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "C:/Users/Frize/current_project/WelcompEnds/ressource"
@@ -26,8 +27,8 @@ pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesserac
 class DataHandler(Resource):
     blocks = []
 
-    def postprocess_image(self, image):
-        # img = cv2.imdecode(numpy.fromstring(image.read(), numpy.uint8), cv2.IMREAD_UNCHANGED)
+    def postprocess_image(self):
+        image = 'C:/Users/Frize/current_project/WelcompEnds/ressource/factureImage.png'
         img = cv2.imread(image)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, thresh1 = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
@@ -45,6 +46,7 @@ class DataHandler(Resource):
             self.blocks.append(item)
             count = count + 1
         json_data = json.dumps(self.blocks)
+        os.remove(image)
         return json_data
 
 
@@ -56,12 +58,9 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def get_data():
     data_handler = DataHandler()
-    # return request.files.get('image')
-    # return print(request.url)
-    print('This is error output', file=sys.stderr)
-    print('This is standard output', file=sys.stdout)
-    image = request.url
-    return data_handler.postprocess_image(image)
+    request.files.get('image').save(os.path.join(app.config['UPLOAD_FOLDER'], request.files.get('image').filename))
+    os.renames('C:/Users/Frize/current_project/WelcompEnds/ressource/factureImage', 'C:/Users/Frize/current_project/WelcompEnds/ressource/factureImage.png')
+    return data_handler.postprocess_image()
 
 
 if __name__ == '__main__':
